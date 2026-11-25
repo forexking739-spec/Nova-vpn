@@ -8,6 +8,57 @@ const blue = Color(0xFF398BFF);
 const purple = Color(0xFF914DFF);
 const card = Color(0xFF111A30);
 
+class Server {
+  final String country, flag, city;
+  final bool premium;
+
+  const Server(this.country, this.flag, this.city,
+      {this.premium = false});
+}
+
+const servers = [
+  Server('United States', '🇺🇸', 'New York'),
+  Server('United States', '🇺🇸', 'Los Angeles', premium: true),
+  Server('United States', '🇺🇸', 'Chicago', premium: true),
+  Server('United States', '🇺🇸', 'Dallas', premium: true),
+  Server('Canada', '🇨🇦', 'Toronto'),
+  Server('Canada', '🇨🇦', 'Vancouver', premium: true),
+  Server('United Kingdom', '🇬🇧', 'London'),
+  Server('United Kingdom', '🇬🇧', 'Manchester', premium: true),
+  Server('Germany', '🇩🇪', 'Frankfurt'),
+  Server('Germany', '🇩🇪', 'Berlin', premium: true),
+  Server('France', '🇫🇷', 'Paris', premium: true),
+  Server('Netherlands', '🇳🇱', 'Amsterdam', premium: true),
+  Server('Switzerland', '🇨🇭', 'Zurich', premium: true),
+  Server('Sweden', '🇸🇪', 'Stockholm', premium: true),
+  Server('Norway', '🇳🇴', 'Oslo', premium: true),
+  Server('Italy', '🇮🇹', 'Milan', premium: true),
+  Server('Spain', '🇪🇸', 'Madrid', premium: true),
+  Server('Turkey', '🇹🇷', 'Istanbul', premium: true),
+  Server('Poland', '🇵🇱', 'Warsaw', premium: true),
+  Server('Singapore', '🇸🇬', 'Singapore'),
+  Server('Japan', '🇯🇵', 'Tokyo', premium: true),
+  Server('Japan', '🇯🇵', 'Osaka', premium: true),
+  Server('South Korea', '🇰🇷', 'Seoul', premium: true),
+  Server('India', '🇮🇳', 'Mumbai'),
+  Server('India', '🇮🇳', 'Delhi', premium: true),
+  Server('Malaysia', '🇲🇾', 'Kuala Lumpur', premium: true),
+  Server('Indonesia', '🇮🇩', 'Jakarta', premium: true),
+  Server('Thailand', '🇹🇭', 'Bangkok', premium: true),
+  Server('UAE', '🇦🇪', 'Dubai', premium: true),
+  Server('Saudi Arabia', '🇸🇦', 'Riyadh', premium: true),
+  Server('Pakistan', '🇵🇰', 'Karachi'),
+  Server('Pakistan', '🇵🇰', 'Lahore', premium: true),
+  Server('Australia', '🇦🇺', 'Sydney', premium: true),
+  Server('Australia', '🇦🇺', 'Melbourne', premium: true),
+  Server('New Zealand', '🇳🇿', 'Auckland', premium: true),
+  Server('Brazil', '🇧🇷', 'Sao Paulo', premium: true),
+  Server('Argentina', '🇦🇷', 'Buenos Aires', premium: true),
+  Server('Chile', '🇨🇱', 'Santiago', premium: true),
+  Server('South Africa', '🇿🇦', 'Johannesburg', premium: true),
+  Server('Egypt', '🇪🇬', 'Cairo', premium: true),
+];
+
 class NovaApp extends StatelessWidget {
   const NovaApp({super.key});
 
@@ -15,6 +66,7 @@ class NovaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'NOVA VPN',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: bg,
         colorScheme: const ColorScheme.dark(
@@ -27,11 +79,6 @@ class NovaApp extends StatelessWidget {
   }
 }
 
-class Server {
-  final String name, flag, city;
-  const Server(this.name, this.flag, this.city);
-}
-
 class NovaHome extends StatefulWidget {
   const NovaHome({super.key});
 
@@ -41,21 +88,14 @@ class NovaHome extends StatefulWidget {
 
 class _NovaHomeState extends State<NovaHome>
     with SingleTickerProviderStateMixin {
-
   late AnimationController pulse;
 
-  bool connected = false;
+  Server selected = servers[8];
 
-  Server selected = const Server(
-    'Germany', '🇩🇪', 'Frankfurt'
-  );
-
-  final servers = const [
-    Server('United States', '🇺🇸', 'New York'),
-    Server('United Kingdom', '🇬🇧', 'London'),
-    Server('Germany', '🇩🇪', 'Frankfurt'),
-    Server('Singapore', '🇸🇬', 'Singapore'),
-  ];
+  bool premiumUser = false;
+  bool autoConnect = false;
+  bool killSwitch = false;
+  bool notifications = true;
 
   @override
   void initState() {
@@ -72,90 +112,276 @@ class _NovaHomeState extends State<NovaHome>
     super.dispose();
   }
 
+  void message(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: card,
+      ),
+    );
+  }
+
   void showServers() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: const Color(0xFF101A32),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(30),
+          top: Radius.circular(28),
         ),
       ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 45,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 25),
-              const Text(
-                'Choose your location',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 18),
-              ...servers.map((s) => ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 5),
-                leading: Text(
-                  s.flag,
-                  style: const TextStyle(fontSize: 30),
-                ),
-                title: Text(
-                  s.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  s.city,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                  ),
-                ),
-                trailing: selected.name == s.name
-                    ? const Icon(
-                        Icons.check_circle,
-                        color: blue,
-                      )
-                    : const Icon(
-                        Icons.chevron_right,
-                        color: Colors.white38,
+      builder: (sheetContext) {
+        String search = '';
+        String filter = 'All';
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final filtered = servers.where((s) {
+              final matchesSearch =
+                  s.country.toLowerCase().contains(search.toLowerCase()) ||
+                  s.city.toLowerCase().contains(search.toLowerCase());
+
+              final matchesFilter = filter == 'All' ||
+                  (filter == 'Free' && !s.premium) ||
+                  (filter == 'Premium' && s.premium);
+
+              return matchesSearch && matchesFilter;
+            }).toList();
+
+            return SafeArea(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * .82,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                onTap: () {
-                  setState(() {
-                    selected = s;
-                    connected = false;
-                  });
-                  Navigator.pop(context);
-                },
-              )),
-            ],
-          ),
+                      const SizedBox(height: 22),
+                      const Text(
+                        'Choose your location',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      TextField(
+                        onChanged: (v) =>
+                            setSheetState(() => search = v),
+                        decoration: InputDecoration(
+                          hintText: 'Search country or city',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(.06),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: ['All', 'Free', 'Premium'].map((f) {
+                          final active = filter == f;
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: ChoiceChip(
+                                label: Center(child: Text(f)),
+                                selected: active,
+                                onSelected: (_) =>
+                                    setSheetState(() => filter = f),
+                                selectedColor: blue,
+                                backgroundColor: card,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(
+                                child: Text('No locations found'),
+                              )
+                            : ListView.builder(
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final s = filtered[index];
+                                  final isSelected =
+                                      selected.city == s.city &&
+                                      selected.country == s.country;
+
+                                  return ListTile(
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
+                                    leading: Text(
+                                      s.flag,
+                                      style: const TextStyle(fontSize: 29),
+                                    ),
+                                    title: Text(
+                                      s.country,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(s.city),
+                                    trailing: s.premium
+                                        ? const Icon(
+                                            Icons.lock,
+                                            color: purple,
+                                            size: 19,
+                                          )
+                                        : Icon(
+                                            isSelected
+                                                ? Icons.check_circle
+                                                : Icons.chevron_right,
+                                            color: blue,
+                                          ),
+                                    onTap: () {
+                                      if (s.premium && !premiumUser) {
+                                        Navigator.pop(context);
+                                        showPremium();
+                                        return;
+                                      }
+
+                                      setState(() => selected = s);
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showPremium() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: card,
+        title: const Text('NOVA PREMIUM'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '\$5 / month',
+              style: TextStyle(
+                fontSize: 28,
+                color: blue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 15),
+            Text('• Access to Premium locations'),
+            Text('• More city choices'),
+            Text('• Premium server selection'),
+            SizedBox(height: 12),
+            Text(
+              'Payment is not connected yet.',
+              style: TextStyle(color: Colors.orangeAccent),
+            ),
+          ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CLOSE'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              message('Subscription payment setup is required.');
+            },
+            child: const Text('SUBSCRIBE'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showSettings() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: card,
+            title: const Text('Settings'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SwitchListTile(
+                  title: const Text('Auto connect'),
+                  value: autoConnect,
+                  onChanged: (v) {
+                    setState(() => autoConnect = v);
+                    setDialogState(() {});
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Kill switch'),
+                  value: killSwitch,
+                  onChanged: (v) {
+                    setState(() => killSwitch = v);
+                    setDialogState(() {});
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Notifications'),
+                  value: notifications,
+                  onChanged: (v) {
+                    setState(() => notifications = v);
+                    setDialogState(() {});
+                  },
+                ),
+                const Divider(),
+                const ListTile(
+                  title: Text('Protocol'),
+                  subtitle: Text('WireGuard integration required'),
+                ),
+                const ListTile(
+                  title: Text('App version'),
+                  subtitle: Text('NOVA VPN 1.0.0'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('DONE'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   void connect() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: card,
-        content: Text(
-          'WireGuard server configuration required. '
-          'VPN connection is not active yet.',
-        ),
-      ),
+    message(
+      'VPN is not connected. A real WireGuard server and configuration are required.',
     );
   }
 
@@ -176,14 +402,9 @@ class _NovaHomeState extends State<NovaHome>
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              22, 18, 22, 25,
-            ),
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 25),
             child: Column(
               children: [
-
-                // HEADER
-
                 Row(
                   children: [
                     Container(
@@ -194,12 +415,6 @@ class _NovaHomeState extends State<NovaHome>
                         gradient: const LinearGradient(
                           colors: [blue, purple],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: blue.withOpacity(.35),
-                            blurRadius: 18,
-                          ),
-                        ],
                       ),
                       child: const Icon(
                         Icons.shield_rounded,
@@ -208,8 +423,7 @@ class _NovaHomeState extends State<NovaHome>
                     ),
                     const SizedBox(width: 12),
                     const Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'NOVA VPN',
@@ -230,29 +444,13 @@ class _NovaHomeState extends State<NovaHome>
                       ],
                     ),
                     const Spacer(),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.06),
-                        borderRadius: BorderRadius.circular(13),
-                        border: Border.all(
-                          color: Colors.white12,
-                        ),
-                      ),
-                      child: IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.settings_outlined,
-                          color: Colors.white70,
-                        ),
-                      ),
+                    IconButton(
+                      onPressed: showSettings,
+                      icon: const Icon(Icons.settings_outlined),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 38),
-
-                // TITLE
-
                 const Text(
                   'YOUR DIGITAL FREEDOM',
                   style: TextStyle(
@@ -262,21 +460,16 @@ class _NovaHomeState extends State<NovaHome>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 13),
-
                 const Text(
                   'Explore Without Limits.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -.5,
                   ),
                 ),
-
                 const SizedBox(height: 9),
-
                 const Text(
                   'Secure. Private. Unlimited.',
                   style: TextStyle(
@@ -284,16 +477,11 @@ class _NovaHomeState extends State<NovaHome>
                     fontSize: 13,
                   ),
                 ),
-
                 const SizedBox(height: 42),
-
-                // CONNECT BUTTON
-
                 AnimatedBuilder(
                   animation: pulse,
                   builder: (context, child) {
                     final glow = 20 + pulse.value * 25;
-
                     return Container(
                       width: 245,
                       height: 245,
@@ -320,11 +508,9 @@ class _NovaHomeState extends State<NovaHome>
                       ),
                       padding: const EdgeInsets.all(17),
                       child: Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                          gradient: LinearGradient(
                             colors: [
                               Color(0xFF438EFF),
                               Color(0xFF7547FF),
@@ -337,262 +523,26 @@ class _NovaHomeState extends State<NovaHome>
                           child: InkWell(
                             customBorder: const CircleBorder(),
                             onTap: connect,
-                            child: Column(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.power_settings_new,
                                   size: 65,
                                   color: Colors.white,
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: 12),
                                 Text(
-                                  connected
-                                      ? 'CONNECTED'
-                                      : 'CONNECT',
-                                  style: const TextStyle(
+                                  'CONNECT',
+                                  style: TextStyle(
                                     fontSize: 19,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 3,
                                   ),
                                 ),
-                                const SizedBox(height: 5),
-                                const Text(
+                                SizedBox(height: 5),
+                                Text(
                                   'TAP TO CONNECT',
                                   style: TextStyle(
                                     fontSize: 9,
-                                    color: Colors.white70,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 26),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 17,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.05),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: Colors.white12,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Colors.orangeAccent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      const Text(
-                        'NOT CONNECTED',
-                        style: TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 2,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 38),
-
-                // SERVER SECTION
-
-                Row(
-                  children: [
-                    const Text(
-                      'SERVER LOCATION',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const Spacer(),
-                    const Text(
-                      '4 LOCATIONS',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: blue,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 15),
-
-                InkWell(
-                  onTap: showServers,
-                  borderRadius: BorderRadius.circular(22),
-                  child: Container(
-                    padding: const EdgeInsets.all(19),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.055),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: blue.withOpacity(.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: blue.withOpacity(.06),
-                          blurRadius: 20,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          selected.flag,
-                          style: const TextStyle(fontSize: 38),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                selected.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                selected.city,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.white54,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: blue,
-                          size: 28,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // INFORMATION CARDS
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: infoCard(
-                        Icons.speed_rounded,
-                        'LIVE PING',
-                        '-- ms',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: infoCard(
-                        Icons.security_rounded,
-                        'PROTOCOL',
-                        'WireGuard',
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                // BOTTOM BRAND
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.shield_outlined,
-                      color: blue,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'POWERED BY NOVA TECHNOLOGY',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(.35),
-                        fontSize: 9,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget infoCard(
-    IconData icon,
-    String title,
-    String value,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 20,
-        horizontal: 10,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(.055),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(.09),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: blue, size: 27),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 9,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+                                    color: Colors.whi
